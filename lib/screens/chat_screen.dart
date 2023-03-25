@@ -51,8 +51,9 @@ class ChatRoom extends StatelessWidget {
             if (snapshot.data != null) {
               return Container(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(userMap['username'] ?? ''),
+                    Text(userMap['username']),
                     Text(
                       snapshot.data!['status'],
                       style: const TextStyle(fontSize: 14),

@@ -70,7 +70,7 @@ class _ChatRoomState extends State<ChatRoom> {
         .doc(fileName)
         .set({
       'sendby': _auth.currentUser!.displayName,
-      'message': '',
+      'message': ''.trim(),
       'type': 'img',
       'time': FieldValue.serverTimestamp(),
     });
@@ -171,7 +171,6 @@ class _ChatRoomState extends State<ChatRoom> {
               .doc(widget.userMap['uid'])
               .snapshots(),
           builder: (context, snapshot) {
-            print(snapshot.data!['status']);
             if (snapshot.data != null) {
               return Container(
                 child: Column(
@@ -254,7 +253,6 @@ class _ChatRoomState extends State<ChatRoom> {
                       SizedBox(
                         width: size.width / 1.3,
                         child: TextField(
-                          
                           controller: _message,
                           decoration: InputDecoration(
                             suffixIcon: IconButton(
@@ -275,7 +273,7 @@ class _ChatRoomState extends State<ChatRoom> {
                           onChanged: (value) {
                             textFieldScrollController.jumpTo(
                                 textFieldScrollController
-                                    .position.maxScrollExtent);       
+                                    .position.maxScrollExtent);
                           },
                         ),
                       ),
@@ -310,10 +308,23 @@ class _ChatRoomState extends State<ChatRoom> {
               ),
               margin: const EdgeInsets.symmetric(
                 vertical: 5,
-                horizontal: 8,          
+                horizontal: 8,
               ),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(
+                    12,
+                  ),
+                  topRight: const Radius.circular(
+                    12,
+                  ),
+                  bottomLeft: map['sendby'] == _auth.currentUser!.displayName
+                      ? const Radius.circular(12)
+                      : const Radius.circular(0),
+                  bottomRight: map['sendby'] == _auth.currentUser!.displayName
+                      ? const Radius.circular(0)
+                      : const Radius.circular(12),
+                ),
                 color: map['sendby'] == _auth.currentUser!.displayName
                     ? Colors.blue
                     : Colors.black,

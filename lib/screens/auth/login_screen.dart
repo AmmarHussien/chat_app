@@ -1,6 +1,6 @@
 import 'package:chat_app/model/methods.dart';
 import 'package:chat_app/screens/home_screen.dart';
-import 'package:chat_app/screens/singup_screen.dart';
+import 'package:chat_app/screens/auth/singup_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -84,13 +84,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: size.width,
                       alignment: Alignment.center,
                       child: textFormFiled(
-                          size: size,
-                          hintText: 'email',
-                          icon: Icons.account_box_rounded,
-                          controller: _email,
-                          obscureText: false,
-                          type: TextInputType.emailAddress,
-                          lable: 'Email'),
+                        size: size,
+                        hintText: 'email',
+                        icon: Icons.account_box_rounded,
+                        controller: _email,
+                        obscureText: false,
+                        type: TextInputType.emailAddress,
+                        lable: 'Email',
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -100,13 +101,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: size.width,
                         alignment: Alignment.center,
                         child: textFormFiled(
-                            size: size,
-                            hintText: 'password',
-                            icon: Icons.lock,
-                            controller: _password,
-                            obscureText: true,
-                            type: TextInputType.text,
-                            lable: 'Password'),
+                          size: size,
+                          hintText: 'password',
+                          icon: Icons.lock,
+                          controller: _password,
+                          obscureText: true,
+                          type: TextInputType.text,
+                          lable: 'Password',
+                        ),
                       ),
                     ),
                     SizedBox(

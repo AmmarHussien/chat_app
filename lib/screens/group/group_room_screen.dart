@@ -1,19 +1,18 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'group_info.dart';
 
-class GroupRoomScreen extends StatefulWidget {
-  const GroupRoomScreen({super.key});
+class GroupRoomScreen extends StatelessWidget {
+  GroupRoomScreen({
+    super.key,
+    required this.groupChatId,
+    required this.groupName,
+  });
 
-  @override
-  State<GroupRoomScreen> createState() => _GroupRoomScreenState();
-}
+  final String groupChatId, groupName;
 
-class _GroupRoomScreenState extends State<GroupRoomScreen> {
   final TextEditingController _message = TextEditingController();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -22,51 +21,39 @@ class _GroupRoomScreenState extends State<GroupRoomScreen> {
 
   ScrollController textFieldScrollController = ScrollController();
 
-  String currentUserName = 'user1';
+  void onSendMessage() async {
+    if (_message.text.isNotEmpty) {
+      Map<String, dynamic> chatData = {
+        'sendby': _auth.currentUser!.displayName,
+        'message': _message.text.trim(),
+        'type': 'text',
+        'time': FieldValue.serverTimestamp(),
+      };
+      _message.clear();
 
-  List<Map<String, dynamic>> dummyChatList = [
-    {
-      'message': 'User1 created this Group',
-      'type': 'notify',
-    },
-    {
-      'message': 'hello',
-      'sendby': 'user1',
-      'type': 'text',
-    },
-    {
-      'message': 'hello',
-      'sendby': 'user2',
-      'type': 'text',
-    },
-    {
-      'message': 'hello',
-      'sendby': 'user3',
-      'type': 'text',
-    },
-    {
-      'message': 'hello',
-      'sendby': 'user4',
-      'type': 'text',
-    },
-    {
-      'message': 'User1 add this Group',
-      'type': 'notify',
-    },
-  ];
+      await _firestore
+          .collection('groups')
+          .doc(groupChatId)
+          .collection('chats')
+          .add(chatData);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Group Name',
+        title: Text(
+          groupName,
         ),
         actions: [
           IconButton(
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const GroupInfo())),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const GroupInfo(),
+              ),
+            ),
             icon: const Icon(
               Icons.more_vert_sharp,
             ),
@@ -77,13 +64,35 @@ class _GroupRoomScreenState extends State<GroupRoomScreen> {
         child: Column(
           children: [
             Container(
-              height: size.height / 1.27,
-              width: size.width,
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  return messageTile(size, dummyChatList[index]);
+              height: size.height / 1.25,
+              // width: size.width,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection('groups')
+                    .doc(groupChatId)
+                    .collection('chats')
+                    .orderBy(
+                      "time",
+                      descending: true,
+                    )
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return ListView.builder(
+                      reverse: true,
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        Map<String, dynamic> chatMap =
+                            snapshot.data!.docs[index].data()
+                                as Map<String, dynamic>;
+
+                        return messageTile(size, chatMap);
+                      },
+                    );
+                  } else {
+                    return Container();
+                  }
                 },
-                itemCount: dummyChatList.length,
               ),
             ),
             Container(
@@ -132,7 +141,7 @@ class _GroupRoomScreenState extends State<GroupRoomScreen> {
                         icon: const Icon(
                           Icons.send,
                         ),
-                        onPressed: () {},
+                        onPressed: onSendMessage,
                       ),
                     ],
                   ),
@@ -146,61 +155,76 @@ class _GroupRoomScreenState extends State<GroupRoomScreen> {
   }
 
   Widget messageTile(Size size, Map<String, dynamic> chatMap) {
-    return Builder(builder: (context) {
-      if (chatMap['type'] == 'text') {
-        return Container(
-          width: size.width,
-          alignment: chatMap['sendby'] == currentUserName
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8,
-              horizontal: 14,
-            ),
-            margin: const EdgeInsets.symmetric(
-              vertical: 5,
-              horizontal: 8,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(
-                15,
+    return Builder(
+      builder: (context) {
+        if (chatMap['type'] == 'text') {
+          return Container(
+            width: size.width,
+            alignment: chatMap['sendby'] == _auth.currentUser!.displayName
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10,
+                horizontal: 14,
               ),
-              color: Colors.blue,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  chatMap['sendby'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+              margin: const EdgeInsets.symmetric(
+                vertical: 5,
+                horizontal: 8,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(
+                    12,
                   ),
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                Text(
-                  chatMap['message'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                  topRight: const Radius.circular(
+                    12,
                   ),
+                  bottomLeft:
+                      chatMap['sendby'] == _auth.currentUser!.displayName
+                          ? const Radius.circular(12)
+                          : const Radius.circular(0),
+                  bottomRight:
+                      chatMap['sendby'] == _auth.currentUser!.displayName
+                          ? const Radius.circular(0)
+                          : const Radius.circular(12),
                 ),
-              ],
+                color: chatMap['sendby'] == _auth.currentUser!.displayName
+                    ? Colors.blue
+                    : Colors.black,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    chatMap['sendby'],
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white),
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    chatMap['message'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      } else if (chatMap['type'] == 'img') {
-        return Container(
-          width: size.width,
-          alignment: chatMap['sendby'] == currentUserName
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          child: Container(
+          );
+        } else if (chatMap['type'] == 'img') {
+          return Container(
+            width: size.width,
+            alignment: chatMap['sendby'] == _auth.currentUser!.displayName
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Container(
               padding: const EdgeInsets.symmetric(
                 vertical: 10,
                 horizontal: 14,
@@ -210,40 +234,36 @@ class _GroupRoomScreenState extends State<GroupRoomScreen> {
                 horizontal: 8,
               ),
               height: size.height / 2,
-              child: Image.network(chatMap['message'])),
-        );
-      } else if (chatMap['type'] == 'notify') {
-        return Container(
-          width: size.width,
-          alignment: Alignment.center,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 5,
-              horizontal: 8,
-            ),
-            margin: const EdgeInsets.symmetric(
-              vertical: 5,
-              horizontal: 8,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(
-                5,
-              ),
-              color: Colors.black38,
-            ),
-            child: Text(
-              chatMap['message'],
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              child: Image.network(
+                chatMap['message'],
               ),
             ),
-          ),
-        );
-      } else {
-        return const SizedBox();
-      }
-    });
+          );
+        } else if (chatMap['type'] == "notify") {
+          return Container(
+            width: size.width,
+            alignment: Alignment.center,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Colors.black38,
+              ),
+              child: Text(
+                chatMap['message'],
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+        } else {
+          return const SizedBox();
+        }
+      },
+    );
   }
 }

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'create_group/add_members.dart';
+import 'create_group_screen/add_members.dart';
 import 'group_room_screen.dart';
 
 class GroupChatHomeScreen extends StatefulWidget {
@@ -20,7 +20,6 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getAvailableGroups();
   }
@@ -65,7 +64,10 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
                   ),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const GroupRoomScreen(),
+                      builder: (_) => GroupRoomScreen(
+                        groupChatId: groupList[index]['id'],
+                        groupName: groupList[index]['groupname'],
+                      ),
                     ),
                   ),
                 );
@@ -75,7 +77,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => const AddMembersInGroup(),
+            builder: (_) =>  AddMembersInGroup(),
           ),
         ),
         tooltip: 'Create Group',

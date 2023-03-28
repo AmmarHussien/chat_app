@@ -1,9 +1,8 @@
 import 'package:chat_app/screens/home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-
-import '../group_room_screen.dart';
 
 class CreatGroup extends StatefulWidget {
   const CreatGroup({
@@ -20,6 +19,7 @@ class CreatGroup extends StatefulWidget {
 class _CreatGroupState extends State<CreatGroup> {
   final TextEditingController _groupName = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isLoading = false;
 
   void createGroup() async {
@@ -28,7 +28,7 @@ class _CreatGroupState extends State<CreatGroup> {
     });
     String groupId = const Uuid().v1();
 
-    await _firestore.collection('groups').doc('groupId').set({
+    await _firestore.collection('groups').doc(groupId).set({
       'members': widget.memberList,
       'id': groupId,
     });
@@ -45,6 +45,13 @@ class _CreatGroupState extends State<CreatGroup> {
         'id': groupId,
       });
     }
+
+    await _firestore.collection('groups').doc(groupId).collection('chats').add({
+      'message': "${_auth.currentUser!.displayName} Created This Group",
+      'type': 'notify',
+      'time': FieldValue.serverTimestamp(),
+    });
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => const HomeScreen(),

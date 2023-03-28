@@ -51,7 +51,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
       ),
       body: isLoading
           ? const Center(
-              child: const CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             )
           : ListView.builder(
               itemBuilder: ((context, index) {
@@ -77,7 +77,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) =>  AddMembersInGroup(),
+            builder: (_) => const AddMembersINGroup(),
           ),
         ),
         tooltip: 'Create Group',

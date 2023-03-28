@@ -3,47 +3,48 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'create_group.dart';
+class AddMembers extends StatefulWidget {
+  const AddMembers({
+    super.key,
+    required this.groupName,
+    required this.groupId,
+    required this.memberList,
+  });
 
-class AddMembersINGroup extends StatefulWidget {
-  const AddMembersINGroup({super.key});
+  final String groupName;
+  final String groupId;
+  final List memberList;
 
   @override
-  State<AddMembersINGroup> createState() => _AddMembersINGroupState();
+  State<AddMembers> createState() => _AddMembersState();
 }
 
-class _AddMembersINGroupState extends State<AddMembersINGroup> {
-  List<Map<String, dynamic>> membersList = [];
+class _AddMembersState extends State<AddMembers> {
   final TextEditingController _search = TextEditingController();
-  bool isloading = false;
-  Map<String, dynamic>? userMap;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  Map<String, dynamic>? userMap;
+  bool isLoading = false;
+  List membersList = [];
 
   @override
   void initState() {
     super.initState();
-    getCurrentUserDetalis();
+    membersList = widget.memberList;
   }
 
-  void getCurrentUserDetalis() async {
-    await _firestore
-        .collection('users')
-        .doc(_auth.currentUser!.uid)
-        .get()
-        .then((map) {
-      membersList.add({
-        'username': map['username'],
-        'useremail': map['useremail'],
-        'uid': map['uid'],
-        'isAdmin': true,
-      });
-    });
+  void showSnackBar(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: color,
+      ),
+    );
   }
 
   void onSearch() async {
     setState(() {
-      isloading = true;
+      isLoading = true;
     });
 
     await _firestore
@@ -53,24 +54,26 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
         .then((user) {
       setState(() {
         userMap = user.docs[0].data();
-        isloading = false;
+        isLoading = false;
       });
       if (kDebugMode) {
         print(userMap);
       }
-    }).catchError((error) {
-      // showSnackBar(
-      //   'no user contian this email',
-      //   Colors.red,
-      // );
-      userMap = null;
-      setState(() {
-        isloading = false;
-      });
-    });
+    }).catchError(
+      (error) {
+        showSnackBar(
+          'no user contian this email',
+          Colors.red,
+        );
+        userMap = null;
+        setState(() {
+          isLoading = false;
+        });
+      },
+    );
   }
 
-  void onResultTap() {
+  void onAddMembers() async {
     bool isAleardyExist = false;
     for (int i = 0; i < membersList.length; i++) {
       if (membersList[i]['uid'] == userMap?['uid']) {
@@ -86,23 +89,41 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
           'uid': userMap?['uid'],
           'isAdmin': false,
         });
-        userMap = null;
       });
-    }
-  }
 
-  void onRemoveMembers(int index) {
-    if (membersList[index]['uid'] != _auth.currentUser!.uid) {
-      setState(() {
-        membersList.removeAt(index);
-      });
+      Navigator.of(context).pop();
     }
+
+    await _firestore.collection('groups').doc(widget.groupId).update({
+      "members": membersList,
+    });
+
+    await _firestore
+        .collection('users')
+        .doc(userMap!['uid'])
+        .collection('groups')
+        .doc(widget.groupId)
+        .set({
+      "groupname": widget.groupName,
+      "id": widget.groupId,
+    });
+    await _firestore
+        .collection('groups')
+        .doc(
+          widget.groupId,
+        )
+        .collection('chats')
+        .add({
+      'message':
+          "${_auth.currentUser!.displayName} Add ${userMap!['username']}",
+      'type': 'notify',
+      'time': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Members'),
@@ -111,31 +132,6 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
-              child: ListView.builder(
-                itemCount: membersList.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    onTap: () => onRemoveMembers(index),
-                    title: Text(
-                      membersList[index]['username'],
-                    ),
-                    subtitle: Text(
-                      membersList[index]['useremail'],
-                    ),
-                    leading: const Icon(
-                      Icons.account_box,
-                      color: Colors.black,
-                    ),
-                    trailing: const Icon(
-                      Icons.close,
-                    ),
-                  );
-                },
-              ),
-            ),
             SizedBox(
               height: size.height / 50,
             ),
@@ -162,7 +158,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
             SizedBox(
               height: size.height / 50,
             ),
-            isloading
+            isLoading
                 ? Container(
                     height: size.height / 10,
                     width: size.width / 12,
@@ -175,7 +171,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
                   ),
             userMap != null
                 ? ListTile(
-                    onTap: onResultTap,
+                    onTap: onAddMembers,
                     leading: const Icon(
                       Icons.account_box,
                       color: Colors.black,
@@ -195,20 +191,6 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
           ],
         ),
       ),
-      floatingActionButton: membersList.length >= 2
-          ? FloatingActionButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => CreatGroup(
-                    memberList: membersList,
-                  ),
-                ),
-              ),
-              child: const Icon(
-                Icons.forward,
-              ),
-            )
-          : const SizedBox(),
     );
   }
 }

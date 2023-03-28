@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 import 'group_info.dart';
 
@@ -20,6 +26,78 @@ class GroupRoomScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   ScrollController textFieldScrollController = ScrollController();
+  File? imageFile;
+
+  Future getImageGallary() async {
+    ImagePicker _pickedimage = ImagePicker();
+
+    await _pickedimage.pickImage(source: ImageSource.gallery).then((xFile) {
+      if (xFile != null) {
+        imageFile = File(xFile.path);
+        uploadImage();
+      }
+    });
+  }
+
+  Future getImageCamera() async {
+    ImagePicker _pickedimage = ImagePicker();
+
+    await _pickedimage.pickImage(source: ImageSource.camera).then((xFile) {
+      if (xFile != null) {
+        imageFile = File(xFile.path);
+        uploadImage();
+      }
+    });
+  }
+
+  Future uploadImage() async {
+    String fileName = const Uuid().v1();
+    int status = 1;
+
+    await _firestore
+        .collection('groups')
+        .doc(groupChatId)
+        .collection('chats')
+        .doc(fileName)
+        .set({
+      'sendby': _auth.currentUser!.displayName,
+      'message': ''.trim(),
+      'type': 'img',
+      'time': FieldValue.serverTimestamp(),
+    });
+
+    var ref =
+        FirebaseStorage.instance.ref().child('images').child('$fileName.jpg');
+
+    var uploadImage = await ref.putFile(imageFile!).catchError((error) async {
+      await _firestore
+          .collection('groups')
+          .doc(groupChatId)
+          .collection('chats')
+          .doc(fileName)
+          .delete();
+
+      status = 0;
+    });
+
+    if (status == 1) {
+      String imageUrl = await uploadImage.ref.getDownloadURL();
+
+      await _firestore
+          .collection('groups')
+          .doc(groupChatId)
+          .collection('chats')
+          .doc(fileName)
+          .update(
+        {'message': imageUrl},
+      );
+      if (kDebugMode) {
+        print(imageUrl);
+      }
+    }
+
+    // String imageUrl = await uploadImage.ref.getDownloadURL();
+  }
 
   void onSendMessage() async {
     if (_message.text.isNotEmpty) {
@@ -39,6 +117,33 @@ class GroupRoomScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _showSimpleDialog(BuildContext context) async {
+    await showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            // <-- SEE HERE
+            title: const Text('Pick image from'),
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  getImageCamera();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Camera'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  getImageGallary();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Gallery'),
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -51,7 +156,10 @@ class GroupRoomScreen extends StatelessWidget {
           IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const GroupInfo(),
+                builder: (_) => GroupInfo(
+                  groupId: groupChatId,
+                  groupName: groupName,
+                ),
               ),
             ),
             icon: const Icon(
@@ -116,7 +224,9 @@ class GroupRoomScreen extends StatelessWidget {
                           controller: _message,
                           decoration: InputDecoration(
                             suffixIcon: IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _showSimpleDialog(context);
+                              },
                               icon: const Icon(
                                 Icons.photo,
                               ),

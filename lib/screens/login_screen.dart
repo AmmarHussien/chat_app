@@ -1,6 +1,7 @@
 import 'package:chat_app/model/methods.dart';
 import 'package:chat_app/screens/home_screen.dart';
 import 'package:chat_app/screens/singup_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +15,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool isLoading = false;
+  final _formKey = GlobalKey<FormState>();
+
+  void showSnackBar(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: color,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,100 +36,105 @@ class _LoginScreenState extends State<LoginScreen> {
               child: CircularProgressIndicator(),
             )
           : SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: size.height / 20,
-                  ),
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    width: size.width / 1.2,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: size.height / 20,
+                    ),
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      width: size.width / 1.2,
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: size.height / 50,
-                  ),
-                  SizedBox(
-                    width: size.width / 1.3,
-                    child: const Text(
-                      'Welcome',
-                      style: TextStyle(
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
+                    SizedBox(
+                      height: size.height / 50,
+                    ),
+                    SizedBox(
+                      width: size.width / 1.3,
+                      child: const Text(
+                        'Welcome',
+                        style: TextStyle(
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    width: size.width / 1.3,
-                    child: const Text(
-                      'Sing In to Contiue!',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w500,
+                    SizedBox(
+                      width: size.width / 1.3,
+                      child: const Text(
+                        'Sing In to Contiue!',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: size.height / 10,
-                  ),
-                  Container(
-                    width: size.width,
-                    alignment: Alignment.center,
-                    child: textFiled(
-                      size,
-                      'email',
-                      Icons.account_box_rounded,
-                      _email,
-                      false,
+                    SizedBox(
+                      height: size.height / 10,
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                    ),
-                    child: Container(
+                    Container(
                       width: size.width,
                       alignment: Alignment.center,
-                      child: textFiled(
-                        size,
-                        'password',
-                        Icons.lock,
-                        _password,
-                        true,
+                      child: textFormFiled(
+                          size: size,
+                          hintText: 'email',
+                          icon: Icons.account_box_rounded,
+                          controller: _email,
+                          obscureText: false,
+                          type: TextInputType.emailAddress,
+                          lable: 'Email'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                      ),
+                      child: Container(
+                        width: size.width,
+                        alignment: Alignment.center,
+                        child: textFormFiled(
+                            size: size,
+                            hintText: 'password',
+                            icon: Icons.lock,
+                            controller: _password,
+                            obscureText: true,
+                            type: TextInputType.text,
+                            lable: 'Password'),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: size.height / 10,
-                  ),
-                  customButtom(
-                    size,
-                  ),
-                  SizedBox(
-                    height: size.height / 40,
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreatAccount(),
+                    SizedBox(
+                      height: size.height / 10,
+                    ),
+                    customButtom(
+                      size,
+                    ),
+                    SizedBox(
+                      height: size.height / 40,
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreatAccount(),
+                        ),
+                      ),
+                      child: const Text(
+                        'Create Account',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
@@ -127,19 +143,30 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget customButtom(Size size) {
     return GestureDetector(
       onTap: () {
-        if (_email.text.isNotEmpty && _password.text.isNotEmpty) {
+        if (_email.text.isNotEmpty &&
+            _password.text.isNotEmpty &&
+            _email.text.contains('@') &&
+            _email.text.contains('.') &&
+            _password.text.length > 5) {
           setState(() {
             isLoading = true;
           });
           logIn(
             _email.text,
             _password.text,
+            context,
           ).then((user) {
             if (user != null) {
               setState(() {
                 isLoading = false;
               });
-              print('Login Sucessfll');
+              showSnackBar(
+                'Login Sucessfll',
+                Colors.green,
+              );
+              // if (kDebugMode) {
+              //   print('Login Sucessfll');
+              // }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -147,14 +174,32 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               );
             } else {
-              print('Login Filed');
+              showSnackBar(
+                'Login filed',
+                Theme.of(context).errorColor,
+              );
+              // ScaffoldMessenger.of(context).showSnackBar(
+              //   SnackBar(
+              //     content: const Text('Login filed'),
+              //     backgroundColor: Theme.of(context).errorColor,
+              //   ),
+              // );
               setState(() {
                 isLoading = false;
               });
             }
           });
         } else {
-          print('please fill form correctly');
+          showSnackBar(
+            'password must be 7 characters and valid email formate',
+            Theme.of(context).errorColor,
+          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: const Text('please fill form correctly'),
+          //     backgroundColor: Theme.of(context).errorColor,
+          //   ),
+          // );
         }
       },
       child: Container(
@@ -179,20 +224,28 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget textFiled(
-    Size size,
-    String hintText,
-    IconData icon,
-    TextEditingController text,
-    bool obscureText,
-  ) {
-    return SizedBox(
-      height: size.height / 15,
-      width: size.width / 1.1,
-      child: TextField(
-        obscureText: obscureText,
-        controller: text,
-        decoration: InputDecoration(
+  Widget textFormFiled({
+    required Size size,
+    required String hintText,
+    IconData? icon,
+    required String lable,
+    required TextEditingController controller,
+    required bool obscureText,
+    required TextInputType type,
+    Function? validate,
+  }) =>
+      SizedBox(
+        height: size.height / 15,
+        width: size.width / 1.1,
+        child: TextFormField(
+          validator: (value) {
+            validate;
+          },
+          keyboardType: type,
+          obscureText: obscureText,
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: lable,
             prefixIcon: Icon(
               icon,
             ),
@@ -204,8 +257,8 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(
                 10,
               ),
-            )),
-      ),
-    );
-  }
+            ),
+          ),
+        ),
+      );
 }

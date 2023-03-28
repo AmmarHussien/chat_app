@@ -15,6 +15,16 @@ class _CreatAccountState extends State<CreatAccount> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool isLoading = false;
+
+  void showSnackBar(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: color,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -142,8 +152,13 @@ class _CreatAccountState extends State<CreatAccount> {
     return GestureDetector(
       onTap: () {
         if (_name.text.isNotEmpty &&
+            _name.text.length > 3 &&
+            _name.text.length < 20 &&
             _email.text.isNotEmpty &&
-            _password.text.isNotEmpty) {
+            _email.text.contains('@') &&
+            _email.text.contains('.') &&
+            _password.text.isNotEmpty &&
+            _password.text.length > 5) {
           setState(() {
             isLoading = true;
           });
@@ -152,13 +167,16 @@ class _CreatAccountState extends State<CreatAccount> {
             _name.text,
             _email.text,
             _password.text,
+            context,
           ).then((user) {
             if (user != null) {
               setState(() {
                 isLoading = false;
               });
-              print('Create Account Sucessfll');
-              print('Login Sucessfll');
+              showSnackBar(
+                'Create Account Sucessfll',
+                Colors.green,
+              );
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -166,11 +184,23 @@ class _CreatAccountState extends State<CreatAccount> {
                 ),
               );
             } else {
-              print('Creat Account Filed');
+              showSnackBar(
+                'Creat Account Filed',
+                Colors.red,
+              );
+              setState(() {
+                isLoading = false;
+              });
+              //print('Creat Account Filed');
             }
           });
         } else {
-          print('Please enter Fileds');
+          showSnackBar(
+            'make sure name characters more than  3 , email formate , password more than 5',
+            Colors.red,
+          );
+          // print(
+          //     'Minimum 1 Upper case Minimum 1 lowercase Minimum 1 Numeric Number Minimum 1 Special Character Common Allow Character ( ! @ #  & * ~ )');
           setState(() {
             isLoading = false;
           });

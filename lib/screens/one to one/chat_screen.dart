@@ -310,7 +310,7 @@ class _ChatRoomState extends State<ChatRoom> {
               ),
               margin: const EdgeInsets.symmetric(
                 vertical: 5,
-                horizontal: 8,
+                horizontal: 8,          
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(15),

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'create_group/add_members.dart';
@@ -11,6 +13,34 @@ class GroupChatHomeScreen extends StatefulWidget {
 }
 
 class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  List groupList = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getAvailableGroups();
+  }
+
+  void getAvailableGroups() async {
+    String uid = _auth.currentUser!.uid;
+
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('groups')
+        .get()
+        .then((value) {
+      setState(() {
+        groupList = value.docs;
+        isLoading = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -20,24 +50,28 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
           'Groups',
         ),
       ),
-      body: ListView.builder(
-        itemBuilder: ((context, index) {
-          return ListTile(
-            title: Text(
-              'Group $index',
+      body: isLoading
+          ? const Center(
+              child: const CircularProgressIndicator(),
+            )
+          : ListView.builder(
+              itemBuilder: ((context, index) {
+                return ListTile(
+                  title: Text(
+                    groupList[index]['groupname'],
+                  ),
+                  leading: const Icon(
+                    Icons.group,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const GroupRoomScreen(),
+                    ),
+                  ),
+                );
+              }),
+              itemCount: groupList.length,
             ),
-            leading: const Icon(
-              Icons.group,
-            ),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const GroupRoomScreen(),
-              ),
-            ),
-          );
-        }),
-        itemCount: 5,
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(

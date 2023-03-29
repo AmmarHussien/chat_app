@@ -98,6 +98,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(
+            Icons.account_circle_outlined,
+            size: 40,
+          ),
+          onPressed: () {},
+        ),
         title: const Text(
           'Home Screen',
         ),

@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,9 +31,9 @@ class GroupRoomScreen extends StatelessWidget {
   File? imageFile;
 
   Future getImageGallary() async {
-    ImagePicker _pickedimage = ImagePicker();
+    ImagePicker pickedimage = ImagePicker();
 
-    await _pickedimage.pickImage(source: ImageSource.gallery).then((xFile) {
+    await pickedimage.pickImage(source: ImageSource.gallery).then((xFile) {
       if (xFile != null) {
         imageFile = File(xFile.path);
         uploadImage();
@@ -40,9 +42,9 @@ class GroupRoomScreen extends StatelessWidget {
   }
 
   Future getImageCamera() async {
-    ImagePicker _pickedimage = ImagePicker();
+    ImagePicker pickedimage = ImagePicker();
 
-    await _pickedimage.pickImage(source: ImageSource.camera).then((xFile) {
+    await pickedimage.pickImage(source: ImageSource.camera).then((xFile) {
       if (xFile != null) {
         imageFile = File(xFile.path);
         uploadImage();
@@ -78,6 +80,7 @@ class GroupRoomScreen extends StatelessWidget {
           .delete();
 
       status = 0;
+      return null;
     });
 
     if (status == 1) {
@@ -171,7 +174,7 @@ class GroupRoomScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
+            SizedBox(
               height: size.height / 1.25,
               // width: size.width,
               child: StreamBuilder<QuerySnapshot>(

@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? userMap;
+  Map<String, dynamic>? userInfo;
   bool isloading = false;
   final TextEditingController _search = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     setStatus('Online');
+    getUser();
   }
 
   void setStatus(String status) async {
@@ -56,13 +58,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void onSearch() async {
-    FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     setState(() {
       isloading = true;
     });
 
-    await _firestore
+    await firestore
         .collection('users')
         .where('useremail', isEqualTo: _search.text)
         .get()
@@ -71,17 +73,50 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         userMap = user.docs[0].data();
         isloading = false;
       });
-      print(userMap);
     }).catchError((error) {
       showSnackBar(
         'no user contian this email',
         Colors.red,
       );
-      userMap = null;
+      //userMap = null;
       setState(() {
         isloading = false;
       });
     });
+  }
+
+
+  void getUser() async {
+    await _firestore
+        .collection('users')
+        .where('uid', isEqualTo: _auth.currentUser!.uid)
+        .get()
+        .then((user) {
+      setState(() {
+        userInfo = user.docs[0].data();
+        isloading = false;
+      });
+    });
+  }
+
+  Future<void> _showSimpleDialog(BuildContext context) async {
+    await showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            // <-- SEE HERE
+            backgroundColor: Colors.grey[300],
+            title: const Text('User Info'),
+            children: <Widget>[
+              SimpleDialogOption(
+                child: Text('Email: ${userInfo!['useremail']}'),
+              ),
+              SimpleDialogOption(
+                child: Text('Name: ${userInfo!['username']}'),
+              ),
+            ],
+          );
+        });
   }
 
   void showSnackBar(String text, Color color) {
@@ -103,7 +138,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Icons.account_circle_outlined,
             size: 40,
           ),
-          onPressed: () {},
+          onPressed: () {
+            _showSimpleDialog(context);
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(
+            //     builder: (_) => const ProfileScreen(),
+            //   ),
+            //);
+          },
         ),
         title: const Text(
           'Home Screen',

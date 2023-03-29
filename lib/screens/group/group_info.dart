@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:chat_app/screens/group/add_new_members_to_group.dart';
 import 'package:chat_app/screens/home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,11 +34,11 @@ class _GroupInfoState extends State<GroupInfo> {
   bool checkAdmin() {
     bool isAdmin = false;
 
-    memberList.forEach((element) {
+    for (var element in memberList) {
       if (element['uid'] == _auth.currentUser!.uid) {
         isAdmin = element['isAdmin'];
       }
-    });
+    }
     return isAdmin;
   }
 
@@ -79,7 +81,6 @@ class _GroupInfoState extends State<GroupInfo> {
         });
       }
     } else {
-      print('can not remove ');
     }
   }
 
@@ -113,7 +114,7 @@ class _GroupInfoState extends State<GroupInfo> {
         (route) => false,
       );
     } else {
-      print('a7a');
+      
     }
   }
 
@@ -150,7 +151,7 @@ class _GroupInfoState extends State<GroupInfo> {
                       alignment: Alignment.centerLeft,
                       child: BackButton(),
                     ),
-                    Container(
+                    SizedBox(
                       height: size.height / 8,
                       width: size.width / 1.1,
                       child: Row(
@@ -172,7 +173,7 @@ class _GroupInfoState extends State<GroupInfo> {
                             width: size.width / 20,
                           ),
                           Expanded(
-                            child: Container(
+                            child: SizedBox(
                               child: Text(
                                 widget.groupName,
                                 style: TextStyle(

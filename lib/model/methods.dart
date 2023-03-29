@@ -1,9 +1,9 @@
+
 import 'package:chat_app/screens/auth/login_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 Future<User?> createAccount(
   String name,
@@ -11,12 +11,12 @@ Future<User?> createAccount(
   String password,
   BuildContext context,
 ) async {
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
 
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   try {
-    UserCredential userCrendetial = await _auth.createUserWithEmailAndPassword(
+    UserCredential userCrendetial = await auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -27,20 +27,20 @@ Future<User?> createAccount(
 
     userCrendetial.user!.updateDisplayName(name);
 
-    await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
+    await firestore.collection('users').doc(auth.currentUser!.uid).set({
       "username": name,
       "useremail": email,
       "status": "Unavalible",
-      "uid": _auth.currentUser!.uid,
+      "uid": auth.currentUser!.uid,
     });
 
     return userCrendetial.user;
   } catch (error) {
-    var message = ' An error occurred plase check your Credential';
+  
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error.toString()),
-        backgroundColor: Theme.of(context).errorColor,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -52,16 +52,16 @@ Future<User?> logIn(
   String password,
   BuildContext context,
 ) async {
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   try {
-    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+    UserCredential userCredential = await auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    _firestore.collection('users').doc(_auth.currentUser!.uid).get().then(
+    firestore.collection('users').doc(auth.currentUser!.uid).get().then(
           (value) => userCredential.user!.updateDisplayName(
             value['username'],
           ),
@@ -73,7 +73,7 @@ Future<User?> logIn(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Theme.of(context).errorColor,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
     if (kDebugMode) {
@@ -86,10 +86,10 @@ Future<User?> logIn(
 Future logOut(
   BuildContext context,
 ) async {
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   try {
-    await _auth.signOut().then((value) {
+    await auth.signOut().then((value) {
       Navigator.push(
         context,
         MaterialPageRoute(

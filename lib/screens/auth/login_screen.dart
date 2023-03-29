@@ -1,7 +1,6 @@
 import 'package:chat_app/model/methods.dart';
 import 'package:chat_app/screens/home_screen.dart';
 import 'package:chat_app/screens/auth/singup_screen.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -46,12 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       alignment: Alignment.centerLeft,
                       width: size.width / 1.2,
-                      child: IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                        ),
-                      ),
+                      
                     ),
                     SizedBox(
                       height: size.height / 50,
@@ -178,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
             } else {
               showSnackBar(
                 'Login filed',
-                Theme.of(context).errorColor,
+                Theme.of(context).colorScheme.error,
               );
               // ScaffoldMessenger.of(context).showSnackBar(
               //   SnackBar(
@@ -194,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           showSnackBar(
             'password must be 7 characters and valid email formate',
-            Theme.of(context).errorColor,
+            Theme.of(context).colorScheme.error,
           );
           // ScaffoldMessenger.of(context).showSnackBar(
           //   SnackBar(
@@ -242,6 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: TextFormField(
           validator: (value) {
             validate;
+            return null;
           },
           keyboardType: type,
           obscureText: obscureText,

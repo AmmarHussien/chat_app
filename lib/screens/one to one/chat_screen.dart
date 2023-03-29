@@ -15,7 +15,7 @@ enum ImageOptions {
 
 // ignore: must_be_immutable
 class ChatRoom extends StatefulWidget {
-  ChatRoom({
+  const ChatRoom({
     super.key,
     required this.userMap,
     required this.chatRoomId,
@@ -38,9 +38,9 @@ class _ChatRoomState extends State<ChatRoom> {
   File? imageFile;
 
   Future getImageGallary() async {
-    ImagePicker _pickedimage = ImagePicker();
+    ImagePicker pickedimage = ImagePicker();
 
-    await _pickedimage.pickImage(source: ImageSource.gallery).then((xFile) {
+    await pickedimage.pickImage(source: ImageSource.gallery).then((xFile) {
       if (xFile != null) {
         imageFile = File(xFile.path);
         uploadImage();
@@ -49,9 +49,9 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 
   Future getImageCamera() async {
-    ImagePicker _pickedimage = ImagePicker();
+    ImagePicker pickedimage = ImagePicker();
 
-    await _pickedimage.pickImage(source: ImageSource.camera).then((xFile) {
+    await pickedimage.pickImage(source: ImageSource.camera).then((xFile) {
       if (xFile != null) {
         imageFile = File(xFile.path);
         uploadImage();
@@ -87,6 +87,7 @@ class _ChatRoomState extends State<ChatRoom> {
           .delete();
 
       status = 0;
+      return null;
     });
 
     if (status == 1) {
@@ -172,7 +173,7 @@ class _ChatRoomState extends State<ChatRoom> {
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.data != null) {
-              return Container(
+              return SizedBox(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

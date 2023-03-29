@@ -66,7 +66,7 @@ class _CreatGroupState extends State<CreatGroup> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Group Name',
         ),
       ),
